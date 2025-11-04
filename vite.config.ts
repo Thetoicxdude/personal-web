@@ -6,13 +6,18 @@ export default defineConfig({
   plugins: [react()],
   base: '/personal-web/',
   build: {
+    minify: true,
+    manifest: true,
     rollupOptions: {
+      input: {
+        main: './index.html',
+      },
       output: {
-        entryFileNames: '[name].[hash].js',
-        chunkFileNames: '[name].[hash].js',
-        assetFileNames: '[name].[hash].[ext]'
+        format: 'es',
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
-  },
-  assetsInclude: ['**/*.js', '**/*.ts', '**/*.tsx']
+  }
 })
