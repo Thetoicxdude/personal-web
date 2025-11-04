@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactElement } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import '@xterm/xterm/css/xterm.css';
 import { v4 as uuid } from 'uuid';
