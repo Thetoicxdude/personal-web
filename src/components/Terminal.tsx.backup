@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, ReactElement } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import '@xterm/xterm/css/xterm.css';
-import { v4 as uuid } from 'uuid';
 
 interface TerminalProps {
   toggleTheme: () => void;
@@ -289,200 +288,31 @@ interface TerminalTab {
   userName: string;
   isRoot: boolean;
   aliases: Record<string, string>;
-  groups?: string[]; // 添加可選的 groups 屬性
-  hostName?: string; // 添加可選的 hostName 屬性
 }
 
 const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
-  // 語言相關狀態 - 這個是全局的，所有標籤頁共享
+  // 基本狀態定義（不依賴於標籤頁的狀態）
   const [language, setLanguage] = useState<Language>('zh_TW');
   const [isBooting, setIsBooting] = useState<boolean>(false);
   const [bootStage, setBootStage] = useState<number>(bootMessages.length);
   const [isRickRolling, setIsRickRolling] = useState<boolean>(false);
-  
-  // 參考
-  const inputRef = useRef<HTMLInputElement>(null);
-  const outputRef = useRef<HTMLDivElement>(null);
-  const terminalRef = useRef<HTMLDivElement>(null);
-  
-  // 共享狀態
+  const [groups] = useState<string[]>(['users']);
   const [passwordAttempts, setPasswordAttempts] = useState<number>(0);
   const [isSudoPrompt, setIsSudoPrompt] = useState<boolean>(false);
   const [sudoCommand, setSudoCommand] = useState<string>('');
-  const [isSuPrompt, setIsSuPrompt] = useState<boolean>(false);
-  const [suTarget, setSuTarget] = useState<string>('root'); // 預設切換到 root
+  const inputRef = useRef<HTMLInputElement>(null);
+  const outputRef = useRef<HTMLDivElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const [hostName] = useState<string>('terminal');
   const [isSearchingHistory, setIsSearchingHistory] = useState<boolean>(false);
   const [historySearchTerm, setHistorySearchTerm] = useState<string>('');
   const [historySearchResults, setHistorySearchResults] = useState<string[]>([]);
   const [historySearchIndex, setHistorySearchIndex] = useState<number>(-1);
-  const [groups] = useState<string[]>(['users']); // 添加回 groups
-  const [hostName] = useState<string>('terminal'); // 添加回 hostName
-  
-  // 在 Terminal 組件的 state 中添加標籤支持
-  const [tabs, setTabs] = useState<TerminalTab[]>(() => [{
-    id: 'tab-1',
-    title: 'Terminal 1',
-    commandHistory: [],
-    historyIndex: -1,
-    outputHistory: [],
-    currentDirectory: '~',
-    previousDirectory: null,
-    input: '',
-    cursorPosition: 0,
-    isFullFeatured: false,
-    userName: 'guest',
-    isRoot: false,
-    aliases: {
-      'll': 'ls -l',
-      'la': 'ls -a',
-      'cls': 'clear'
-    }
-  }]);
-  const [activeTabIndex, setActiveTabIndex] = useState(0);
-  
-  // 當前活動標籤頁的狀態
-  const currentTab = tabs[activeTabIndex];
-  
-  // 使用這些狀態簡化代碼訪問
-  const input = currentTab.input;
-  const setInput = (newInput: string) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      newTabs[activeTabIndex] = {
-        ...newTabs[activeTabIndex],
-        input: newInput
-      };
-      return newTabs;
-    });
-  };
-  
-  const commandHistory = currentTab.commandHistory;
-  const setCommandHistory = (newHistory: string[] | ((prev: string[]) => string[])) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      if (typeof newHistory === 'function') {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          commandHistory: newHistory(newTabs[activeTabIndex].commandHistory)
-        };
-      } else {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          commandHistory: newHistory
-        };
-      }
-      return newTabs;
-    });
-  };
-  
-  const historyIndex = currentTab.historyIndex;
-  const setHistoryIndex = (newIndex: number | ((prev: number) => number)) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      if (typeof newIndex === 'function') {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          historyIndex: newIndex(newTabs[activeTabIndex].historyIndex)
-        };
-      } else {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          historyIndex: newIndex
-        };
-      }
-      return newTabs;
-    });
-  };
-  
-  const outputHistory = currentTab.outputHistory;
-  const setOutputHistory = (newHistory: {command: string, result: CommandResult[]}[] | ((prev: {command: string, result: CommandResult[]}[]) => {command: string, result: CommandResult[]}[])) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      if (typeof newHistory === 'function') {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          outputHistory: newHistory(newTabs[activeTabIndex].outputHistory)
-        };
-      } else {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          outputHistory: newHistory
-        };
-      }
-      return newTabs;
-    });
-  };
-  
-  const currentDirectory = currentTab.currentDirectory;
-  const setCurrentDirectory = (newDir: string) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      newTabs[activeTabIndex] = {
-        ...newTabs[activeTabIndex],
-        currentDirectory: newDir
-      };
-      return newTabs;
-    });
-  };
-  
-  const cursorPosition = currentTab.cursorPosition;
-  const setCursorPosition = (newPos: number) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      newTabs[activeTabIndex] = {
-        ...newTabs[activeTabIndex],
-        cursorPosition: newPos
-      };
-      return newTabs;
-    });
-  };
-  
-  const previousDirectory = currentTab.previousDirectory;
-  const setPreviousDirectory = (newDir: string | null) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      newTabs[activeTabIndex] = {
-        ...newTabs[activeTabIndex],
-        previousDirectory: newDir
-      };
-      return newTabs;
-    });
-  };
-  
-  const userName = currentTab.userName;
-  const isRoot = currentTab.isRoot;
-  const isFullFeatured = currentTab.isFullFeatured; // 添加 isFullFeatured 變數
-  
-  const aliases = currentTab.aliases;
-  const setAliases = (newAliases: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      if (typeof newAliases === 'function') {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          aliases: newAliases(newTabs[activeTabIndex].aliases)
-        };
-      } else {
-        newTabs[activeTabIndex] = {
-          ...newTabs[activeTabIndex],
-          aliases: newAliases
-        };
-      }
-      return newTabs;
-    });
-  };
-  
-  // 添加 setIsRoot 函數
-  const setIsRoot = (value: boolean) => {
-    setTabs(prevTabs => {
-      const newTabs = [...prevTabs];
-      newTabs[activeTabIndex] = {
-        ...newTabs[activeTabIndex],
-        isRoot: value
-      };
-      return newTabs;
-    });
-  };
+  const [aliases, setAliases] = useState<Record<string, string>>({
+    'll': 'ls -l',
+    'la': 'ls -a',
+    'cls': 'clear'
+  });
   
   // ASCII Art 名字
   const asciiName = [
@@ -773,20 +603,16 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 關於我 ======',
-                '我是一名熱衷於全端開發的軟體工程師，擁有豐富的網頁應用開發經驗。',
-                '我主研人工智能和智能合約技術，專注於 Web3 和前沿科技的開發與應用。',
+                '我是一名熱衷於前端與全端開發的軟體工程師，擁有豐富的網頁應用開發經驗。',
                 '我熱愛創造直覺且美觀的使用者介面，並且重視程式碼品質與使用者體驗。',
-                '在工作之外，我熱衷於科技和金融領域的創新，喜歡探索新技術的無限可能。',
-                '我也是開源專案的積極貢獻者，熱衷於分享知識並持續學習成長。',
+                '在工作之外，我也是開源專案的貢獻者，喜歡分享知識並持續學習新技術。',
                 '我的GitHub: https://github.com/Thetoicxdude'
               ],
               contentEn: [
                 '====== About Me ======',
                 'I am a software engineer passionate about frontend and full-stack development, with extensive experience in web application development.',
-                'I specialize in AI and smart contract technologies, focusing on Web3 and cutting-edge tech development.',
                 'I love creating intuitive and beautiful user interfaces, and I value code quality and user experience.',
-                'Beyond work, I am passionate about innovation in technology and finance, exploring the endless possibilities of new technologies.',
-                'I am also an active open-source contributor, enthusiastic about knowledge sharing and continuous learning.',
+                'Outside of work, I am also an open-source contributor, enjoying knowledge sharing and continuously learning new technologies.',
                 'My GitHub: https://github.com/Thetoicxdude'
               ],
               permissions: 'rw-r--r--',
@@ -798,21 +624,13 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 教育背景 ======',
-                '2025 - 現在 高雄師範大學（NKNU）',
-                '主修領域：軟體工程、人工智能',
-                '',
-                '研究專注：',
-                '- 人工智能應用開發',
-                '- 軟體工程最佳實踐'
+                '2019-2023 - 計算機科學學士',
+                '主修領域：軟體工程、網頁開發、人工智能'
               ],
               contentEn: [
                 '====== Education ======',
-                '2025 - Present National Kaohsiung Normal University (NKNU)',
-                'Major fields: Software Engineering, Artificial Intelligence',
-                '',
-                'Research Focus:',
-                '- Artificial Intelligence Applications',
-                '- Software Engineering Best Practices'
+                '2019-2023 - Bachelor of Computer Science',
+                'Major fields: Software Engineering, Web Development, Artificial Intelligence'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -823,39 +641,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 工作經驗 ======',
-                '2023-至今 - 獨立開發者',
-                '• 人工智慧解決方案客製化開發',
-                '• Discord Bot 設計與開發',
-                '• 全端網站架設與維護',
-                '',
-                '2020-至今 - Minecraft 伺服器開發',
-                '• 伺服器架構設計與維護',
-                '• 插件開發與優化',
-                '• 玩家體驗與系統優化',
-                '',
-                '專業服務：',
-                '• AI 模型訓練與部署',
-                '• 自動化系統開發',
-                '• 網站前後端整合解決方案',
-                '• 遊戲伺服器客製化開發'
+                '2022-至今 - 高級前端開發者',
+                '2020-2022 - 網頁開發實習生',
+                '主要職責：開發與維護企業級網頁應用，設計用戶介面，優化前端性能'
               ],
               contentEn: [
                 '====== Work Experience ======',
-                '2023-Present - Independent Developer',
-                '• Custom AI solution development',
-                '• Discord Bot design and development',
-                '• Full-stack website development and maintenance',
-                '',
-                '2020-Present - Minecraft Server Developer',
-                '• Server architecture design and maintenance',
-                '• Plugin development and optimization',
-                '• Player experience and system optimization',
-                '',
-                'Professional Services:',
-                '• AI model training and deployment',
-                '• Automation system development',
-                '• Website full-stack integration solutions',
-                '• Game server customization development'
+                '2022-Present - Senior Frontend Developer',
+                '2020-2022 - Web Development Intern',
+                'Main responsibilities: Developing and maintaining enterprise web applications, designing user interfaces, optimizing frontend performance'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -898,15 +692,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
                 '====== 後端技術 ======',
                 'Node.js             ████████    80%',
                 'Express             ███████     70%',
-                'Python              ████████████100%',
-                'Database            █████████   90%'
+                'Python              ██████      60%',
+                'Database            ████████    80%'
               ],
               contentEn: [
                 '====== Backend Technologies ======',
                 'Node.js             ████████    80%',
                 'Express             ███████     70%',
-                'Python              ████████████100%',
-                'Database            █████████   90%'
+                'Python              ██████      60%',
+                'Database            ████████    80%'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -918,15 +712,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               content: [
                 '====== 其他技能 ======',
                 'Git/GitHub          ██████████  90%',
-                'Discord Bots        ████████████100%',
-                'AI & ML             ███████████ 95%',
+                'Discord Bots        ████████    80%',
+                'AI & ML             █████████   85%',
                 'Linux               █████████   85%'
               ],
               contentEn: [
                 '====== Other Skills ======',
                 'Git/GitHub          ██████████  90%',
-                'Discord Bots        ████████████100%',
-                'AI & ML             ███████████ 95%',
+                'Discord Bots        ████████    80%',
+                'AI & ML             █████████   85%',
                 'Linux               █████████   85%'
               ],
               permissions: 'rw-r--r--',
@@ -1159,17 +953,17 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 聯絡方式 ======',
-                '📧 Email: yaoyuanou@example.com',
-                '💼 LinkedIn: commin soon',
+                '📧 Email: yourname@example.com',
+                '💼 LinkedIn: linkedin.com/in/yourprofile',
                 '🐱 GitHub: https://github.com/Thetoicxdude',
-                '🐦 Twitter: commin soon'
+                '🐦 Twitter: @yourhandle'
               ],
               contentEn: [
                 '====== Contact Information ======',
-                '📧 Email: yaoyuanou@example.com',
-                '💼 LinkedIn: commin soon',
+                '📧 Email: yourname@example.com',
+                '💼 LinkedIn: linkedin.com/in/yourprofile',
                 '🐱 GitHub: https://github.com/Thetoicxdude',
-                '🐦 Twitter: commin soon'
+                '🐦 Twitter: @yourhandle'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -1180,15 +974,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 社交媒體 ======',
-                'Instagram: @huntottott',
-                'Facebook: Hunt Ott',
-                'Discord: deviser#8769 (常用帳號)'
+                'Instagram: @yourhandle',
+                'Facebook: yourname',
+                'Discord: yourname#1234'
               ],
               contentEn: [
                 '====== Social Media ======',
-                'Instagram: @huntottott',
-                'Facebook: Hunt Ott',
-                'Discord: deviser#8769 (Common Account)'
+                'Instagram: @yourhandle',
+                'Facebook: yourname',
+                'Discord: yourname#1234'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -1297,50 +1091,6 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     }
     
     return current as Record<string, FileSystemItem>;
-  };
-
-  // 遞迴搜索檔案和目錄
-  const findItems = (
-    startPath: string,
-    namePattern?: string,
-    type?: 'f' | 'd',
-    maxDepth: number = -1
-  ): string[] => {
-    const results: string[] = [];
-    const content = getDirectoryFromPath(startPath);
-    
-    if (!content || content.type !== 'directory') return results;
-    
-    const searchInDir = (
-      dirContent: Record<string, FileSystemItem>,
-      currentPath: string,
-      depth: number
-    ) => {
-      if (maxDepth !== -1 && depth > maxDepth) return;
-      
-      for (const [name, item] of Object.entries(dirContent)) {
-        const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
-        
-        // 檢查是否符合類型條件
-        if (type) {
-          if (type === 'f' && item.type !== 'file') continue;
-          if (type === 'd' && item.type !== 'directory') continue;
-        }
-        
-        // 檢查是否符合名稱模式
-        if (!namePattern || name.match(new RegExp(namePattern.replace(/\*/g, '.*')))) {
-          results.push(fullPath);
-        }
-        
-        // 如果是目錄，則遞迴搜索
-        if (item.type === 'directory') {
-          searchInDir(item.content, fullPath, depth + 1);
-        }
-      }
-    };
-    
-    searchInDir(content.content, startPath === '~' ? '' : startPath, 0);
-    return results;
   };
   
   // 獲取檔案內容，根據當前語言返回
@@ -1518,42 +1268,36 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     setIsSearchingHistory(false);
     setHistorySearchTerm('');
     
-    if (!input.trim() && !isSudoPrompt && !isSuPrompt) return;
+    // 如果是sudo密碼輸入，不顯示密碼
+    const displayCmd = isSudoPrompt ? '' : currentTab.input;
     
-    // 特殊處理密碼輸入，不顯示用戶輸入的密碼
-    if (isSudoPrompt || isSuPrompt) {
-      const results = processCommand(input);
-      
-      // 將結果添加到輸出歷史，但不包含命令本身
-      setOutputHistory(prev => [...prev, { command: '', result: results }]);
-    } else {
-      // 將命令添加到命令歷史
-      setCommandHistory(prev => [...prev, input]);
-      
-      // 重置歷史索引
-      setHistoryIndex(-1);
-      
-      // 處理命令並獲取結果
-      const results = processCommand(input);
-      
-      // 將命令和結果添加到輸出歷史
-      setOutputHistory(prev => [...prev, { command: input, result: results }]);
+    // 即使沒有命令也添加到歷史記錄
+    if (!currentTab.input.trim()) {
+      // 直接顯示一個新的提示符
+      appendOutputHistory('', []);
+      updateCurrentTab({ input: '' });
+      return;
     }
     
-    // 重置輸入並聚焦
-    setInput('');
-    setCursorPosition(0);
-    inputRef.current?.focus();
+    // 將命令添加到歷史記錄中，但如果是密碼則不添加
+    if (!isSudoPrompt) {
+      appendCommandHistory(currentTab.input);
+    }
     
-    // 滾動到底部
-    setTimeout(() => {
-      if (outputRef.current) {
-        outputRef.current.scrollTop = outputRef.current.scrollHeight;
-      }
-    }, 0);
+    // 處理命令
+    const result = processCommand(currentTab.input.trim());
     
-    // 特殊處理 clear 命令
-    if (input.trim().toLowerCase() === 'clear') {
+    // 添加到輸出歷史記錄
+    appendOutputHistory(displayCmd, result);
+    
+    // 清空輸入
+    updateCurrentTab({ 
+      input: '',
+      cursorPosition: 0
+    });
+    
+    // 如果是clear命令，則自動滾動
+    if (currentTab.input.trim().toLowerCase() === 'clear') {
       setTimeout(() => {
         if (outputRef.current) {
           outputRef.current.scrollTop = 0;
@@ -1566,40 +1310,29 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     // 處理上下箭頭鍵瀏覽命令歷史
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (historyIndex < commandHistory.length - 1) {
-        const newIndex = historyIndex + 1;
-        setHistoryIndex(newIndex);
-        setInput(commandHistory[commandHistory.length - 1 - newIndex]);
-      }
+      navigateHistory('up');
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (historyIndex > 0) {
-        const newIndex = historyIndex - 1;
-        setHistoryIndex(newIndex);
-        setInput(commandHistory[commandHistory.length - 1 - newIndex]);
-      } else if (historyIndex === 0) {
-        setHistoryIndex(-1);
-        setInput('');
-      }
+      navigateHistory('down');
     } else if (e.key === 'ArrowLeft') {
       // 更新光標位置 - 左移
-      const newPosition = Math.max(0, cursorPosition - 1);
-      setCursorPosition(newPosition);
+      const newPosition = Math.max(0, currentTab.cursorPosition - 1);
+      updateCurrentTab({ cursorPosition: newPosition });
     } else if (e.key === 'ArrowRight') {
       // 更新光標位置 - 右移
-      const newPosition = Math.min(input.length, cursorPosition + 1);
-      setCursorPosition(newPosition);
+      const newPosition = Math.min(currentTab.input.length, currentTab.cursorPosition + 1);
+      updateCurrentTab({ cursorPosition: newPosition });
     } else if (e.key === 'Home') {
       // 移至行首
-      setCursorPosition(0);
+      updateCurrentTab({ cursorPosition: 0 });
     } else if (e.key === 'End') {
       // 移至行尾
-      setCursorPosition(input.length);
+      updateCurrentTab({ cursorPosition: currentTab.input.length });
     } else if (e.key === 'Tab') {
       e.preventDefault();
       
       // 改進的自動完成功能
-      const terms = input.split(' ');
+      const terms = currentTab.input.split(' ');
       const lastTerm = terms[terms.length - 1];
       
       // 如果是第一個詞，自動完成命令
@@ -1613,22 +1346,19 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
         
         // 過濾匹配的命令
         const matchedCommands = availableCommands.filter(cmd => 
-          cmd.startsWith(input.toLowerCase())
+          cmd.startsWith(currentTab.input.toLowerCase())
         );
         
         // 如果只有一個匹配，直接完成
         if (matchedCommands.length === 1) {
-          setInput(matchedCommands[0]);
+          updateCurrentTab({ input: matchedCommands[0] });
         } 
         // 如果有多個匹配，顯示可能的選項
         else if (matchedCommands.length > 1) {
-          setOutputHistory(prev => [...prev, { 
-            command: input, 
-            result: [
-              { type: 'info', content: '可能的命令:' },
-              { type: 'success', content: matchedCommands.join('  ') }
-            ] 
-          }]);
+          appendOutputHistory(currentTab.input, [
+            { type: 'info', content: '可能的命令:' },
+            { type: 'success', content: matchedCommands.join('  ') }
+          ]);
           // 找到共同前綴
           let commonPrefix = matchedCommands[0];
           for (let i = 1; i < matchedCommands.length; i++) {
@@ -1773,37 +1503,18 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     if (isSudoPrompt) {
       setIsSudoPrompt(false);
       
-      // 檢查密碼，通過 userCredentials 檢查
-      const correctPassword = userName in userCredentials ? userCredentials[userName] : '';
-      
-      if (cmd === correctPassword) {
+      // 檢查密碼 (這裡簡化為 "password")
+      if (cmd === 'password') {
         setIsRoot(true);
-        
-        // 處理 sudo su 命令
-        if (sudoCommand === 'su') {
-          setSudoCommand('');
-          // 設置為 root 用戶
-          setIsRoot(true);
-          
-          // 更新當前選項卡的用戶名
-          setTabs(prevTabs => {
-            const newTabs = [...prevTabs];
-            newTabs[activeTabIndex] = {
-              ...newTabs[activeTabIndex],
-              userName: 'root',
-              isRoot: true
-            };
-            return newTabs;
-          });
-          
-          return [{ type: 'success', content: '' }]; // Linux 中 su 命令成功後不會有輸出，只是切換提示符
-        }
         
         // 執行原始 sudo 命令
         const originalCmd = sudoCommand;
         setSudoCommand('');
         
-        return processCommand(originalCmd);
+        return [
+          { type: 'system', content: '' }, // 密碼不顯示
+          ...processCommand(originalCmd)
+        ];
       } else {
         setPasswordAttempts(prev => prev + 1);
         
@@ -1816,34 +1527,6 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
         return [{ type: 'error', content: 'sudo: 認證失敗' }];
       }
     }
-    
-    // 處理 su 密碼輸入
-    if (isSuPrompt) {
-      setIsSuPrompt(false);
-      
-      // 檢查密碼
-      const correctPassword = suTarget in userCredentials ? userCredentials[suTarget] : '';
-      
-      if (cmd === correctPassword) {
-        // 成功切換用戶
-        setIsRoot(suTarget === 'root' || suTarget === 'admin');
-        
-        // 更新當前選項卡的用戶名
-        setTabs(prevTabs => {
-          const newTabs = [...prevTabs];
-          newTabs[activeTabIndex] = {
-            ...newTabs[activeTabIndex],
-            userName: suTarget,
-            isRoot: suTarget === 'root' || suTarget === 'admin'
-          };
-          return newTabs;
-        });
-        
-        return [{ type: 'success', content: '' }]; // 成功後沒有輸出
-      } else {
-        return [{ type: 'error', content: 'su: 認證失敗' }];
-      }
-    }
 
     // 處理空命令
     if (!cmd.trim()) {
@@ -1854,34 +1537,6 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     const parts = cmd.split(' ');
     let command = parts[0].toLowerCase();
     let args = parts.slice(1);
-
-    // 特別處理 deviser start 命令
-    if (command === 'deviser' && args[0] === 'start') {
-      // 檢查是否已經在完整功能模式
-      if (isFullFeatured) {
-        return [{ type: 'info', content: 'Deviser 已經在運行中。' }];
-      }
-
-      // 將所有標籤頁設置為完整功能模式
-      setTabs(prevTabs => {
-        return prevTabs.map(tab => ({
-          ...tab,
-          isFullFeatured: true
-        }));
-      });
-      
-      setIsBooting(true);
-      setBootStage(0);
-      return [];
-    }
-
-    // 在非完整功能模式下限制某些命令
-    if (!isFullFeatured) {
-      const restrictedCommands = ['gh', 'github'];
-      if (restrictedCommands.includes(command)) {
-        return [{ type: 'error', content: '命令未找到。請先輸入 "deviser start" 啟動完整功能。' }];
-      }
-    }
     
     // 檢查別名
     if (aliases[command]) {
@@ -2062,10 +1717,6 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
         if (!isFullFeatured) {
           const hiddenFolders = ['about', 'skills', 'projects', 'contact', '.github'];
           items = items.filter(item => !hiddenFolders.includes(item));
-          // 在非完整功能模式下，如果嘗試直接訪問受限目錄，顯示權限不足
-          if (args.length > 0 && hiddenFolders.some(folder => args.includes(folder))) {
-            return [{ type: 'error', content: '權限不足。請先輸入 "deviser start" 啟動完整功能。' }];
-          }
         }
         
         if (items.length === 0) {
@@ -2224,18 +1875,14 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
         
         // 在非完整功能模式下檢查是否嘗試訪問限制檔案
         if (!isFullFeatured) {
-          const restrictedFolders = ['about', 'skills', 'projects', 'contact', '.github'];
-          const path = args[0].split('/');
-          
-          // 檢查完整路徑中是否包含受限資料夾
-          if (path.some(part => restrictedFolders.includes(part))) {
-            return [{ type: 'error', content: '權限不足。請先輸入 "deviser start" 啟動完整功能。' }];
-          }
-          
-          // 檢查當前目錄是否在受限資料夾中
-          const currentPath = currentDirectory.split('/');
-          if (currentPath.some(part => restrictedFolders.includes(part))) {
-            return [{ type: 'error', content: '權限不足。請先輸入 "deviser start" 啟動完整功能。' }];
+          // 檢查檔案是否在隱藏目錄中
+          if (args[0].includes('/')) {
+            const parts = args[0].split('/');
+            const firstDir = parts[0];
+            const restrictedFolders = ['about', 'skills', 'projects', 'contact', '.github'];
+            if (restrictedFolders.includes(firstDir)) {
+              return [{ type: 'error', content: language === 'zh_TW' ? `cat: ${args[0]}: 檔案不存在` : `cat: ${args[0]}: No such file` }];
+            }
           }
         }
         
@@ -2309,88 +1956,8 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
         if (args.length === 0) {
           return [{ type: 'error', content: 'find: 缺少路徑和表達式' }];
         }
-
-        // 顯示幫助
-        if (args.includes('--help')) {
-          return [
-            { type: 'system', content: 'FIND(1)                   用戶命令                   FIND(1)' },
-            { type: 'system', content: '名稱' },
-            { type: 'success', content: '       find - 在檔案系統中搜索檔案' },
-            { type: 'system', content: '用法' },
-            { type: 'success', content: '       find [路徑] [選項]' },
-            { type: 'system', content: '選項' },
-            { type: 'success', content: '       -name PATTERN    依檔名搜索，支援 * 萬用字元' },
-            { type: 'success', content: '       -type [f|d]      依類型搜索 (f: 檔案, d: 目錄)' },
-            { type: 'success', content: '       -maxdepth N      最大搜索深度' },
-            { type: 'system', content: '範例' },
-            { type: 'success', content: '       find ~ -name "*.txt"      # 搜索所有 .txt 檔案' },
-            { type: 'success', content: '       find ~ -type d           # 列出所有目錄' },
-          ];
-        }
-
-        let startPath = '.';
-        let namePattern: string | undefined;
-        let type: 'f' | 'd' | undefined;
-        let maxDepth = -1;
-
-        // 解析參數
-        for (let i = 0; i < args.length; i++) {
-          switch (args[i]) {
-            case '-name':
-              if (i + 1 < args.length) {
-                namePattern = args[++i].replace(/"/g, '');
-              } else {
-                return [{ type: 'error', content: 'find: -name 後需要指定模式' }];
-              }
-              break;
-            case '-type':
-              if (i + 1 < args.length && ['f', 'd'].includes(args[i + 1])) {
-                type = args[++i] as 'f' | 'd';
-              } else {
-                return [{ type: 'error', content: 'find: -type 必須是 f (檔案) 或 d (目錄)' }];
-              }
-              break;
-            case '-maxdepth':
-              if (i + 1 < args.length) {
-                const depth = parseInt(args[++i]);
-                if (isNaN(depth) || depth < 0) {
-                  return [{ type: 'error', content: 'find: -maxdepth 必須是非負整數' }];
-                }
-                maxDepth = depth;
-              } else {
-                return [{ type: 'error', content: 'find: -maxdepth 後需要指定數字' }];
-              }
-              break;
-            default:
-              if (!args[i].startsWith('-')) {
-                startPath = args[i];
-              }
-          }
-        }
-
-        // 在非完整功能模式下限制搜索範圍
-        if (!isFullFeatured) {
-          const restrictedFolders = ['about', 'skills', 'projects', 'contact', '.github'];
-          if (restrictedFolders.some(folder => startPath.includes(folder))) {
-            return [{ type: 'error', content: '權限不足。請先輸入 "deviser start" 啟動完整功能。' }];
-          }
-        }
-
-        // 執行搜索
-        try {
-          const results = findItems(startPath, namePattern, type, maxDepth);
-          
-          if (results.length === 0) {
-            return [{ type: 'info', content: '未找到符合條件的項目' }];
-          }
-
-          return results.map(path => ({
-            type: 'success' as const,
-            content: path
-          }));
-        } catch (error) {
-          return [{ type: 'error', content: `find: ${error instanceof Error ? error.message : '搜索時發生錯誤'}` }];
-        }
+        
+        return [{ type: 'error', content: '目前尚未支援 find 命令的完整功能' }];
         
       case 'man':
         if (args.length === 0) {
@@ -2468,52 +2035,11 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
           return [{ type: 'error', content: 'sudo: 缺少要執行的命令' }];
         }
         
-        // 特殊處理 sudo su 命令
-        if (args[0] === 'su' && args.length === 1) {
-          setSudoCommand('su');
-          setIsSudoPrompt(true);
-          
-          return [{ type: 'system', content: `[sudo] ${userName} 的密碼:` }];
-        }
-        
         // 儲存要執行的命令並激活密碼提示
         setSudoCommand(args.join(' '));
         setIsSudoPrompt(true);
         
         return [{ type: 'system', content: `[sudo] ${userName} 的密碼:` }];
-      
-      case 'su':
-        // 檢查是否指定了用戶
-        if (args.length > 0) {
-          const targetUser = args[0];
-          // 檢查用戶是否存在
-          if (!(targetUser in userCredentials)) {
-            return [{ type: 'error', content: `su: 用戶 '${targetUser}' 不存在` }];
-          }
-          setSuTarget(targetUser);
-        } else {
-          // 默認切換到 root
-          setSuTarget('root');
-        }
-        
-        // 激活密碼提示
-        setIsSuPrompt(true);
-        
-        // 與實際 Linux 行為一致：非空密碼的用戶需要輸入密碼，空密碼則直接切換
-        if (suTarget === 'guest' || (suTarget in userCredentials && userCredentials[suTarget] === '')) {
-          setIsRoot(suTarget === 'root' || suTarget === 'admin');
-          setTabs(prevTabs => {
-            const newTabs = [...prevTabs];
-            newTabs[activeTabIndex] = {
-              ...newTabs[activeTabIndex],
-              userName: suTarget
-            };
-            return newTabs;
-          });
-          return [{ type: 'success', content: '' }];
-        }
-        
-        return [{ type: 'system', content: 'Password:' }];
       
       case 'id':
         return [
@@ -3105,23 +2631,156 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     }
   };
 
-  // 添加密碼系統，用於權限控制
-  const userCredentials: Record<string, string> = {
-    'guest': '',  // guest 不需要密碼
-    'dev': 'd3v3l0p3r_m0d3',  // 開發者密碼
-    'admin': 'sup3r_s3cr3t_adm1n'  // 管理員密碼
+  // 構建提示符
+  const getPrompt = () => {
+    const currentTab = tabs[activeTabIndex];
+    // 根據當前標籤設置不同的用戶名和主機名
+    const userName = currentTab.title === 'Terminal 2' ? 'dev' : 
+                     currentTab.title === 'Terminal 3' ? 'admin' : 
+                     'guest';
+    const isRoot = currentTab.title === 'Terminal 3';
+    const hostName = currentTab.title.toLowerCase().replace(' ', '');
+    
+    // 根據不同標籤返回不同風格的提示符
+    const promptStyle = { 
+      color: currentTab.title === 'Terminal 1' ? '#FF5722' : 
+            currentTab.title === 'Terminal 2' ? '#2196F3' : 
+            currentTab.title === 'Terminal 3' ? '#4CAF50' : 
+            '#FF5722' 
+    };
+    
+    if (isSudoPrompt) {
+      return <span style={promptStyle}>[sudo] 密碼:</span>;
+    }
+    
+    if (isRoot) {
+      return <span style={promptStyle}>{userName}@{hostName}:<span style={{ color: '#03A9F4' }}>{currentDirectory}</span># </span>;
+    }
+    
+    return <span style={promptStyle}>{userName}@{hostName}:<span style={{ color: '#03A9F4' }}>{currentDirectory}</span>$ </span>;
   };
 
-  // 添加密碼驗證系統，將密碼隱藏在文件系統中
+  // 點擊終端任意位置時，聚焦輸入框
+  const handleTerminalClick = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+      // 更新光標位置
+      setCursorPosition(updateCursorFromSelection(inputRef.current));
+    }
+  };
+
+  // 添加一個新的處理函數用於處理輸入框的點擊
+  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    setCursorPosition(updateCursorFromSelection(input));
+    e.stopPropagation(); // 防止事件冒泡到TerminalWrapper
+  };
+
+  // 添加用於處理鼠標選擇的事件
+  const handleInputSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    setCursorPosition(updateCursorFromSelection(input));
+  };
+
+  // 新增一個函數，根據輸入框的選擇範圍更新光標位置
+  const updateCursorFromSelection = (input: HTMLInputElement) => {
+    if (input) {
+      return input.selectionStart || 0;
+    }
+    return 0;
+  };
+
+  // 添加標籤UI
+  const TabBar = styled.div`
+    display: flex;
+    overflow-x: auto;
+    background-color: ${props => props.theme.tabBarBackground || '#222'};
+    border-bottom: 1px solid ${props => props.theme.tabBorder || '#444'};
+    
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(100, 100, 100, 0.5);
+      border-radius: 2px;
+    }
+  `;
+
+  const Tab = styled.div<{ active: boolean }>`
+    padding: 8px 16px;
+    background-color: ${props => props.active ? props.theme.activeTabBackground || '#333' : 'transparent'};
+    color: ${props => props.active ? props.theme.activeTabColor || '#fff' : props.theme.inactiveTabColor || '#aaa'};
+    border-right: 1px solid ${props => props.theme.tabBorder || '#444'};
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: ${props => props.active ? props.theme.activeTabBackground || '#333' : props.theme.tabHoverBackground || '#2a2a2a'};
+    }
+  `;
+
+  const TabTitle = styled.span`
+    margin-right: 8px;
+  `;
+
+  const CloseButton = styled.span`
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 50%;
+    
+    &:hover {
+      background-color: ${props => props.theme.closeButtonHover || '#555'};
+    }
+  `;
+
+  const AddTabButton = styled.div`
+    padding: 8px 12px;
+    cursor: pointer;
+    color: ${props => props.theme.inactiveTabColor || '#aaa'};
+    
+    &:hover {
+      background-color: ${props => props.theme.tabHoverBackground || '#2a2a2a'};
+    }
+  `;
+
+  // 在 Terminal 組件的 state 中添加標籤支持
+  const [tabs, setTabs] = useState<TerminalTab[]>(() => [{
+    id: 'tab-1',
+    title: 'Terminal 1',
+    commandHistory: [],
+    historyIndex: -1,
+    outputHistory: [],
+    currentDirectory: '~',
+    previousDirectory: null,
+    input: '',
+    cursorPosition: 0,
+    isFullFeatured: true,
+    userName: 'guest',
+    isRoot: false,
+    aliases: {
+      'll': 'ls -l',
+      'la': 'ls -a',
+      'cls': 'clear'
+    }
+  }]);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+
+  // 添加一個新標籤的函數
   const addNewTab = (): CommandResult[] => {
     const newTabIndex = tabs.length;
     const newTabId = `tab-${newTabIndex + 1}`;
     const newTabTitle = `Terminal ${newTabIndex + 1}`;
     
-    // 新標籤頁將繼承系統當前的功能狀態
-    const anyTabFullFeatured = tabs.some(tab => tab.isFullFeatured);
-    
-    // 新標籤頁始終為 guest 用戶
     const newTab: TerminalTab = {
       id: newTabId,
       title: newTabTitle,
@@ -3132,9 +2791,9 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
       previousDirectory: null,
       input: '',
       cursorPosition: 0,
-      isFullFeatured: anyTabFullFeatured, // 使用當前系統的功能狀態
-      userName: 'guest',
-      isRoot: false,
+      isFullFeatured: true,
+      userName: `guest-${newTabIndex + 1}`,
+      isRoot: newTabIndex === 2, // 第三個標籤(索引2)是root
       aliases: {
         'll': 'ls -l',
         'la': 'ls -a',
@@ -3435,128 +3094,144 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     display: block;
   `;
 
-  // 構建提示符
-  const getPrompt = () => {
+  // 使用當前活動標籤的狀態
+  const activeTab = tabs[activeTabIndex];
+  // 把命令歷史和輸出歷史等狀態綁定到當前活動標籤
+  const commandHistory = activeTab.commandHistory;
+  const historyIndex = activeTab.historyIndex;
+  const outputHistory = activeTab.outputHistory;
+  const currentDirectory = activeTab.currentDirectory;
+  const previousDirectory = activeTab.previousDirectory;
+  const input = activeTab.input;
+  const cursorPosition = activeTab.cursorPosition;
+  const isRoot = activeTab.isRoot;
+  const userName = activeTab.userName;
+  const aliases = activeTab.aliases;
+
+  // 創建更新當前標籤狀態的函數
+  const updateActiveTab = (updates: Partial<TerminalTab>) => {
+    setTabs(prevTabs => 
+      prevTabs.map((tab, index) => 
+        index === activeTabIndex ? { ...tab, ...updates } : tab
+      )
+    );
+  };
+
+  // 修改所有使用狀態更新的地方，例如：
+  const setCommandHistory = (value: React.SetStateAction<string[]>) => {
+    const newHistory = typeof value === 'function' 
+      ? value(commandHistory) 
+      : value;
+    
+    updateActiveTab({ commandHistory: newHistory });
+  };
+
+  const setHistoryIndex = (value: React.SetStateAction<number>) => {
+    const newIndex = typeof value === 'function'
+      ? value(historyIndex)
+      : value;
+    
+    updateActiveTab({ historyIndex: newIndex });
+  };
+
+  const setOutputHistory = (value: React.SetStateAction<{command: string, result: CommandResult[]}[]>) => {
+    const newOutput = typeof value === 'function'
+      ? value(outputHistory)
+      : value;
+    
+    updateActiveTab({ outputHistory: newOutput });
+  };
+
+  const setCurrentDirectory = (value: React.SetStateAction<string>) => {
+    const newDir = typeof value === 'function'
+      ? value(currentDirectory)
+      : value;
+    
+    updateActiveTab({ currentDirectory: newDir });
+  };
+
+  const setPreviousDirectory = (value: React.SetStateAction<string | null>) => {
+    const newPrevDir = typeof value === 'function'
+      ? value(previousDirectory)
+      : value;
+    
+    updateActiveTab({ previousDirectory: newPrevDir });
+  };
+
+  const setInput = (value: React.SetStateAction<string>) => {
+    const newInput = typeof value === 'function'
+      ? value(input)
+      : value;
+    
+    updateActiveTab({ input: newInput });
+  };
+
+  const setCursorPosition = (value: React.SetStateAction<number>) => {
+    const newPosition = typeof value === 'function'
+      ? value(cursorPosition)
+      : value;
+    
+    updateActiveTab({ cursorPosition: newPosition });
+  };
+
+  const setAliases = (value: React.SetStateAction<Record<string, string>>) => {
+    const newAliases = typeof value === 'function'
+      ? value(aliases)
+      : value;
+    
+    updateActiveTab({ aliases: newAliases });
+  };
+
+  // 每當標籤頁切換時同步當前標籤頁的狀態到全局狀態
+  useEffect(() => {
+    // 不同標籤頁使用不同顏色和使用者名稱
     const currentTab = tabs[activeTabIndex];
-    const currentUser = currentTab.userName;
-    const currentIsRoot = currentTab.isRoot;
-    const hostName = 'terminal';
     
-    // 根據用戶和權限決定提示符顏色
-    const promptStyle = { 
-      color: currentUser === 'guest' ? '#FF5722' : 
-            currentUser === 'dev' ? '#2196F3' : 
-            currentUser === 'admin' || currentIsRoot ? '#4CAF50' : 
-            '#FF5722' 
-    };
+    // 同步標籤頁的狀態
+    setInput(currentTab.input || '');
+    setCommandHistory(currentTab.commandHistory || []);
+    setHistoryIndex(currentTab.historyIndex || -1);
+    setOutputHistory(currentTab.outputHistory || []);
+    setCurrentDirectory(currentTab.currentDirectory || '~');
+    setPreviousDirectory(currentTab.previousDirectory || null);
+    setCursorPosition(currentTab.cursorPosition || 0);
     
-    if (isSudoPrompt) {
-      return <span style={promptStyle}></span>; // 空提示符，因為 [sudo] 密碼: 已經在前一條命令結果中顯示
+    // 根據標籤頁設置特殊屬性
+    if (activeTabIndex === 0) {
+      // 第一個標籤頁：普通用戶
+      setIsRoot(false);
+    } else if (activeTabIndex === 1) {
+      // 第二個標籤頁：開發者
+      setIsRoot(false);
+    } else if (activeTabIndex === 2) {
+      // 第三個標籤頁：管理員 (root)
+      setIsRoot(true);
     }
-    
-    if (isSuPrompt) {
-      return <span style={promptStyle}></span>; // 空提示符，因為 Password: 已經在前一條命令結果中顯示
-    }
-    
-    if (currentIsRoot) {
-      return <span style={promptStyle}>root@{hostName}:<span style={{ color: '#03A9F4' }}>{currentDirectory}</span># </span>;
-    }
-    
-    return <span style={promptStyle}>{currentUser}@{hostName}:<span style={{ color: '#03A9F4' }}>{currentDirectory}</span>$ </span>;
-  };
+  }, [activeTabIndex, tabs]);
 
-  // 點擊終端任意位置時，聚焦輸入框
-  const handleTerminalClick = () => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-      // 更新光標位置
-      setCursorPosition(updateCursorFromSelection(inputRef.current));
-    }
-  };
-
-  // 添加一個新的處理函數用於處理輸入框的點擊
-  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
-    const input = e.currentTarget;
-    setCursorPosition(updateCursorFromSelection(input));
-    e.stopPropagation(); // 防止事件冒泡到TerminalWrapper
-  };
-
-  // 添加用於處理鼠標選擇的事件
-  const handleInputSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
-    const input = e.currentTarget;
-    setCursorPosition(updateCursorFromSelection(input));
-  };
-
-  // 新增一個函數，根據輸入框的選擇範圍更新光標位置
-  const updateCursorFromSelection = (input: HTMLInputElement) => {
-    if (input) {
-      return input.selectionStart || 0;
-    }
-    return 0;
-  };
-
-  // 添加標籤UI
-  const TabBar = styled.div`
-    display: flex;
-    overflow-x: auto;
-    background-color: ${props => props.theme.tabBarBackground || '#222'};
-    border-bottom: 1px solid ${props => props.theme.tabBorder || '#444'};
-    
-    &::-webkit-scrollbar {
-      height: 4px;
-    }
-    
-    &::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.1);
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background: rgba(100, 100, 100, 0.5);
-      border-radius: 2px;
-    }
-  `;
-
-  const Tab = styled.div<{ active: boolean }>`
-    padding: 8px 16px;
-    background-color: ${props => props.active ? props.theme.activeTabBackground || '#333' : 'transparent'};
-    color: ${props => props.active ? props.theme.activeTabColor || '#fff' : props.theme.inactiveTabColor || '#aaa'};
-    border-right: 1px solid ${props => props.theme.tabBorder || '#444'};
-    cursor: pointer;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s;
-    
-    &:hover {
-      background-color: ${props => props.active ? props.theme.activeTabBackground || '#333' : props.theme.tabHoverBackground || '#2a2a2a'};
-    }
-  `;
-
-  const TabTitle = styled.span`
-    margin-right: 8px;
-  `;
-
-  const CloseButton = styled.span`
-    width: 16px;
-    height: 16px;
-    line-height: 16px;
-    text-align: center;
-    border-radius: 50%;
-    
-    &:hover {
-      background-color: ${props => props.theme.closeButtonHover || '#555'};
-    }
-  `;
-
-  const AddTabButton = styled.div`
-    padding: 8px 12px;
-    cursor: pointer;
-    color: ${props => props.theme.inactiveTabColor || '#aaa'};
-    
-    &:hover {
-      background-color: ${props => props.theme.tabHoverBackground || '#2a2a2a'};
-    }
-  `;
+  // 當狀態改變時，更新當前標籤頁
+  useEffect(() => {
+    setTabs(prevTabs => {
+      const updatedTabs = [...prevTabs];
+      const currentTab = { ...updatedTabs[activeTabIndex] };
+      
+      // 更新標籤頁的狀態
+      currentTab.input = input;
+      currentTab.commandHistory = commandHistory;
+      currentTab.historyIndex = historyIndex;
+      currentTab.outputHistory = outputHistory;
+      currentTab.currentDirectory = currentDirectory;
+      currentTab.previousDirectory = previousDirectory;
+      currentTab.cursorPosition = cursorPosition;
+      currentTab.isRoot = isRoot;
+      
+      updatedTabs[activeTabIndex] = currentTab;
+      return updatedTabs;
+    });
+  }, [
+    input, commandHistory, historyIndex, outputHistory, 
+    currentDirectory, previousDirectory, cursorPosition, isRoot
+  ]);
 
   return (
     <TerminalContainer>
@@ -3567,6 +3242,11 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
             key={tab.id} 
             active={index === activeTabIndex}
             onClick={() => setActiveTabIndex(index)}
+            style={{ 
+              backgroundColor: index === 0 ? '#2E2E2E' : 
+                              index === 1 ? '#203746' : 
+                              index === 2 ? '#243C2A' : '#2E2E2E'
+            }}
           >
             <TabTitle>{tab.title}</TabTitle>
             {tabs.length > 1 && (
@@ -3580,6 +3260,11 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
       <TerminalWrapper 
         ref={terminalRef} 
         onClick={handleTerminalClick}
+        style={{ 
+          backgroundColor: activeTabIndex === 0 ? '#1E1E1E' : 
+                          activeTabIndex === 1 ? '#0D2230' : 
+                          activeTabIndex === 2 ? '#162918' : '#1E1E1E'
+        }}
       >
         <TerminalOutput ref={outputRef}>
           {isBooting ? (

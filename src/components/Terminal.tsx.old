@@ -774,19 +774,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               content: [
                 '====== 關於我 ======',
                 '我是一名熱衷於全端開發的軟體工程師，擁有豐富的網頁應用開發經驗。',
-                '我主研人工智能和智能合約技術，專注於 Web3 和前沿科技的開發與應用。',
                 '我熱愛創造直覺且美觀的使用者介面，並且重視程式碼品質與使用者體驗。',
-                '在工作之外，我熱衷於科技和金融領域的創新，喜歡探索新技術的無限可能。',
-                '我也是開源專案的積極貢獻者，熱衷於分享知識並持續學習成長。',
+                '在工作之外，我也是開源專案的貢獻者，喜歡分享知識並持續學習新技術。',
                 '我的GitHub: https://github.com/Thetoicxdude'
               ],
               contentEn: [
                 '====== About Me ======',
                 'I am a software engineer passionate about frontend and full-stack development, with extensive experience in web application development.',
-                'I specialize in AI and smart contract technologies, focusing on Web3 and cutting-edge tech development.',
                 'I love creating intuitive and beautiful user interfaces, and I value code quality and user experience.',
-                'Beyond work, I am passionate about innovation in technology and finance, exploring the endless possibilities of new technologies.',
-                'I am also an active open-source contributor, enthusiastic about knowledge sharing and continuous learning.',
+                'Outside of work, I am also an open-source contributor, enjoying knowledge sharing and continuously learning new technologies.',
                 'My GitHub: https://github.com/Thetoicxdude'
               ],
               permissions: 'rw-r--r--',
@@ -798,21 +794,13 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 教育背景 ======',
-                '2025 - 現在 高雄師範大學（NKNU）',
-                '主修領域：軟體工程、人工智能',
-                '',
-                '研究專注：',
-                '- 人工智能應用開發',
-                '- 軟體工程最佳實踐'
+                '2019-2023 - 計算機科學學士',
+                '主修領域：軟體工程、網頁開發、人工智能'
               ],
               contentEn: [
                 '====== Education ======',
-                '2025 - Present National Kaohsiung Normal University (NKNU)',
-                'Major fields: Software Engineering, Artificial Intelligence',
-                '',
-                'Research Focus:',
-                '- Artificial Intelligence Applications',
-                '- Software Engineering Best Practices'
+                '2019-2023 - Bachelor of Computer Science',
+                'Major fields: Software Engineering, Web Development, Artificial Intelligence'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -823,39 +811,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 工作經驗 ======',
-                '2023-至今 - 獨立開發者',
-                '• 人工智慧解決方案客製化開發',
-                '• Discord Bot 設計與開發',
-                '• 全端網站架設與維護',
-                '',
-                '2020-至今 - Minecraft 伺服器開發',
-                '• 伺服器架構設計與維護',
-                '• 插件開發與優化',
-                '• 玩家體驗與系統優化',
-                '',
-                '專業服務：',
-                '• AI 模型訓練與部署',
-                '• 自動化系統開發',
-                '• 網站前後端整合解決方案',
-                '• 遊戲伺服器客製化開發'
+                '2022-至今 - 高級前端開發者',
+                '2020-2022 - 網頁開發實習生',
+                '主要職責：開發與維護企業級網頁應用，設計用戶介面，優化前端性能'
               ],
               contentEn: [
                 '====== Work Experience ======',
-                '2023-Present - Independent Developer',
-                '• Custom AI solution development',
-                '• Discord Bot design and development',
-                '• Full-stack website development and maintenance',
-                '',
-                '2020-Present - Minecraft Server Developer',
-                '• Server architecture design and maintenance',
-                '• Plugin development and optimization',
-                '• Player experience and system optimization',
-                '',
-                'Professional Services:',
-                '• AI model training and deployment',
-                '• Automation system development',
-                '• Website full-stack integration solutions',
-                '• Game server customization development'
+                '2022-Present - Senior Frontend Developer',
+                '2020-2022 - Web Development Intern',
+                'Main responsibilities: Developing and maintaining enterprise web applications, designing user interfaces, optimizing frontend performance'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -898,15 +862,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
                 '====== 後端技術 ======',
                 'Node.js             ████████    80%',
                 'Express             ███████     70%',
-                'Python              ████████████100%',
-                'Database            █████████   90%'
+                'Python              ██████      60%',
+                'Database            ████████    80%'
               ],
               contentEn: [
                 '====== Backend Technologies ======',
                 'Node.js             ████████    80%',
                 'Express             ███████     70%',
-                'Python              ████████████100%',
-                'Database            █████████   90%'
+                'Python              ██████      60%',
+                'Database            ████████    80%'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -918,15 +882,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               content: [
                 '====== 其他技能 ======',
                 'Git/GitHub          ██████████  90%',
-                'Discord Bots        ████████████100%',
-                'AI & ML             ███████████ 95%',
+                'Discord Bots        ████████    80%',
+                'AI & ML             █████████   85%',
                 'Linux               █████████   85%'
               ],
               contentEn: [
                 '====== Other Skills ======',
                 'Git/GitHub          ██████████  90%',
-                'Discord Bots        ████████████100%',
-                'AI & ML             ███████████ 95%',
+                'Discord Bots        ████████    80%',
+                'AI & ML             █████████   85%',
                 'Linux               █████████   85%'
               ],
               permissions: 'rw-r--r--',
@@ -1159,17 +1123,17 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 聯絡方式 ======',
-                '📧 Email: yaoyuanou@example.com',
-                '💼 LinkedIn: commin soon',
+                '📧 Email: yourname@example.com',
+                '💼 LinkedIn: linkedin.com/in/yourprofile',
                 '🐱 GitHub: https://github.com/Thetoicxdude',
-                '🐦 Twitter: commin soon'
+                '🐦 Twitter: @yourhandle'
               ],
               contentEn: [
                 '====== Contact Information ======',
-                '📧 Email: yaoyuanou@example.com',
-                '💼 LinkedIn: commin soon',
+                '📧 Email: yourname@example.com',
+                '💼 LinkedIn: linkedin.com/in/yourprofile',
                 '🐱 GitHub: https://github.com/Thetoicxdude',
-                '🐦 Twitter: commin soon'
+                '🐦 Twitter: @yourhandle'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -1180,15 +1144,15 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
               type: 'file',
               content: [
                 '====== 社交媒體 ======',
-                'Instagram: @huntottott',
-                'Facebook: Hunt Ott',
-                'Discord: deviser#8769 (常用帳號)'
+                'Instagram: @yourhandle',
+                'Facebook: yourname',
+                'Discord: yourname#1234'
               ],
               contentEn: [
                 '====== Social Media ======',
-                'Instagram: @huntottott',
-                'Facebook: Hunt Ott',
-                'Discord: deviser#8769 (Common Account)'
+                'Instagram: @yourhandle',
+                'Facebook: yourname',
+                'Discord: yourname#1234'
               ],
               permissions: 'rw-r--r--',
               owner: 'deviser',
@@ -1856,23 +1820,28 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     let args = parts.slice(1);
 
     // 特別處理 deviser start 命令
-    if (command === 'deviser' && args[0] === 'start') {
-      // 檢查是否已經在完整功能模式
-      if (isFullFeatured) {
-        return [{ type: 'info', content: 'Deviser 已經在運行中。' }];
+    if (command === 'deviser') {
+      if (args[0] === 'start') {
+        if (!isFullFeatured) {
+          setTabs(prevTabs => {
+            const newTabs = [...prevTabs];
+            newTabs[activeTabIndex] = {
+              ...newTabs[activeTabIndex],
+              isFullFeatured: true
+            };
+            return newTabs;
+          });
+          
+          setIsBooting(true);
+          setBootStage(0);
+          return [];
+        } else {
+          return [{ type: 'info', content: 'Deviser 服務已經在運行中。' }];
+        }
+      } else {
+        return [{ type: 'error', content: '無效的 deviser 命令。請使用 "deviser start" 啟動服務。' }];
       }
-
-      // 將所有標籤頁設置為完整功能模式
-      setTabs(prevTabs => {
-        return prevTabs.map(tab => ({
-          ...tab,
-          isFullFeatured: true
-        }));
-      });
-      
-      setIsBooting(true);
-      setBootStage(0);
-      return [];
+    }
     }
 
     // 在非完整功能模式下限制某些命令
@@ -3118,21 +3087,27 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     const newTabId = `tab-${newTabIndex + 1}`;
     const newTabTitle = `Terminal ${newTabIndex + 1}`;
     
-    // 新標籤頁將繼承系統當前的功能狀態
-    const anyTabFullFeatured = tabs.some(tab => tab.isFullFeatured);
-    
-    // 新標籤頁始終為 guest 用戶
+    // 新標籤頁始終為 guest 用戶，並且繼承當前的功能狀態
     const newTab: TerminalTab = {
       id: newTabId,
       title: newTabTitle,
       commandHistory: [],
       historyIndex: -1,
-      outputHistory: [],
+      outputHistory: [{
+        command: '',
+        result: [
+          { type: 'system', content: language === 'zh_TW' ? '=========== Deviser 終端機 v1.0.0 ===========' : '=========== Deviser Terminal v1.0.0 ===========' },
+          { type: 'success', content: language === 'zh_TW' ? '歡迎使用 Deviser 終端機風格個人網站！' : 'Welcome to Deviser Terminal-style Personal Website!' },
+          { type: 'info', content: language === 'zh_TW' ? '基本使用說明:' : 'Basic Usage Guide:' },
+          { type: 'success', content: language === 'zh_TW' ? '輸入 "help" 查看可用命令列表' : '1. Type "help" to see available commands' },
+          { type: 'success', content: language === 'zh_TW' ? '輸入 "deviser start" 啟動 deviser 服務。' : 'Type "deviser start" to enable all features.' }
+        ]
+      }],
       currentDirectory: '~',
       previousDirectory: null,
       input: '',
       cursorPosition: 0,
-      isFullFeatured: anyTabFullFeatured, // 使用當前系統的功能狀態
+      isFullFeatured: false, // 新標籤頁初始為基本模式
       userName: 'guest',
       isRoot: false,
       aliases: {
@@ -3558,6 +3533,7 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
     }
   `;
 
+  // JSX render
   return (
     <TerminalContainer>
       {/* 標籤欄始終顯示 */}
@@ -3679,6 +3655,6 @@ const Terminal: React.FC<TerminalProps> = ({ toggleTheme }) => {
       </TerminalWrapper>
     </TerminalContainer>
   );
-};
+}
 
 export default Terminal; 

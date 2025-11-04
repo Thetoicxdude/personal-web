@@ -18,6 +18,13 @@ declare module 'styled-components' {
     highlightColor: string;
     fileColor: string;
     directoryColor: string;
+    tabBarBackground?: string;
+    tabBorder?: string;
+    activeTabBackground?: string;
+    activeTabColor?: string;
+    inactiveTabColor?: string;
+    tabHoverBackground?: string;
+    closeButtonHover?: string;
   }
 }
 
@@ -36,7 +43,14 @@ export const lightTheme: DefaultTheme = {
   resultColor: '#4c566a',
   highlightColor: '#81a1c1',
   fileColor: '#88c0d0', // 檔案顏色
-  directoryColor: '#5e81ac' // 目錄顏色
+  directoryColor: '#5e81ac', // 目錄顏色
+  tabBarBackground: '#e5e9f0',
+  tabBorder: '#d8dee9',
+  activeTabBackground: '#eceff4',
+  activeTabColor: '#2e3440',
+  inactiveTabColor: '#4c566a',
+  tabHoverBackground: '#d8dee9',
+  closeButtonHover: '#c0c5ce'
 }
 
 export const darkTheme: DefaultTheme = {
@@ -54,7 +68,14 @@ export const darkTheme: DefaultTheme = {
   resultColor: '#e5e9f0',
   highlightColor: '#81a1c1',
   fileColor: '#ebcb8b', // 檔案顏色
-  directoryColor: '#81a1c1' // 目錄顏色
+  directoryColor: '#81a1c1', // 目錄顏色
+  tabBarBackground: '#222',
+  tabBorder: '#444',
+  activeTabBackground: '#333',
+  activeTabColor: '#fff',
+  inactiveTabColor: '#aaa',
+  tabHoverBackground: '#2a2a2a',
+  closeButtonHover: '#555'
 }
 
 export const GlobalStyles = createGlobalStyle`
