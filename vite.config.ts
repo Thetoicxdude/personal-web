@@ -6,16 +6,17 @@ export default defineConfig({
   plugins: [react()],
   base: '/personal-web/',
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
+    modulePreload: {
+      polyfill: true
+    },
+    sourcemap: true,
     rollupOptions: {
-      input: './index.html',
       output: {
-        format: 'es',
-        entryFileNames: `assets/[name].[hash].mjs`,
-        chunkFileNames: `assets/[name].[hash].mjs`,
-        assetFileNames: `assets/[name].[hash].[ext]`
+        manualChunks: undefined
       }
     }
+  },
+  resolve: {
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
   }
 })
